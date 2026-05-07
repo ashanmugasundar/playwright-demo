@@ -60,7 +60,7 @@ python manage.py runserver
 # Playwright Django Automation
 
 ## ✅ CI Pipeline
-![CI](https://github.com/ashanmugasundar/<repo>/actions/workflows/test-pipeline.yml/badge.svg)
+![CI](https://github.com/ashanmugasundar/actions/workflows/test-pipeline.yml/badge.svg)
 
 
 ## ✅ Test Coverage
@@ -137,4 +137,4 @@ To run locally:
    Django blocks unsafe sync calls in async contexts [bing.com]
   
     DJANGO_ALLOW_ASYNC_UNSAFE in conftest.py
-    How to manage async to sync call in prod or test completely disabled so no need to worry it ? 
+    How to manage async to sync call in prod or test completely disabled so no need to worry it ?

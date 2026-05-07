@@ -1,4 +1,4 @@
-name: Django Test Pipeline (Multi-stage + Reports)
+name: Django Test Pipeline (Final Working)
 
 on:
   push:
@@ -8,15 +8,15 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
   pull-requests: write
-
 
 jobs:
 
-  # ✅ STAGE 1 - UNIT
+  # ✅ UNIT
   unit-tests:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -24,186 +24,136 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install deps
-        run: |
+      - run: |
           pip install -r requirements.txt
-          pip install pytest-html pytest-cov
+          pip install pytest-html pytest-cov allure-pytest
 
-      - name: Run Unit Tests
-        run: |
-          mkdir -p reports/unit
-          pytest -m unit --alluredir=allure-results/unit \
-            --cov=. --cov-report=xml \
+      - run: |
+          mkdir -p reports/unit allure-results/unit
+          pytest -m unit \
+            --cov=. \
+            --cov-report=xml \
             --cov-report=html:reports/unit/coverage \
             --html=reports/unit/report.html \
-            --self-contained-html
-     
-      - name: Run Coverage Comment
-        uses: py-cov-action/python-coverage-comment-action@v3
-        with:
-          GITHUB_TOKEN: ${{ github.token }}
-    
-      - name: Upload Unit Reports
-        uses: actions/upload-artifact@v4
+            --self-contained-html \
+            --alluredir=allure-results/unit
+
+      - uses: actions/upload-artifact@v4
         with:
           name: unit-reports
           path: reports/unit/
-            
-      - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
+
+      - uses: actions/upload-artifact@v4
         with:
           name: allure-unit
           path: allure-results/unit
 
 
-  # ✅ STAGE 2 - API
+  # ✅ API
   api-tests:
     runs-on: ubuntu-latest
     needs: unit-tests
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install deps
-        run: |
+      - run: |
           pip install -r requirements.txt
-          pip install pytest-html
+          pip install pytest-html allure-pytest
 
-      - name: Run API Tests
-        run: |
-          mkdir -p reports/api
-          pytest -m api --alluredir=allure-results/api \
+      - run: |
+          mkdir -p reports/api allure-results/api
+          pytest -m api \
             --html=reports/api/report.html \
-            --self-contained-html
+            --self-contained-html \
+            --alluredir=allure-results/api
 
-      - name: Upload API Reports
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: api-reports
           path: reports/api/
-      
-      - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
+
+      - uses: actions/upload-artifact@v4
         with:
           name: allure-api
           path: allure-results/api
 
-  # ✅ STAGE 3 - E2E
+
+  # ✅ E2E
   e2e-tests:
     runs-on: ubuntu-latest
     needs: api-tests
 
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install deps
-        run: |
+      - run: |
           pip install -r requirements.txt
-          python -m playwright install --with-deps
-          pip install pytest-html
+          pip install pytest-html pytest-playwright allure-pytest
+          playwright install chromium
 
-      - name: Run E2E Tests
-        run: |
-          mkdir -p reports/e2e
-          pytest -m e2e --alluredir=allure-results/e2e \
+      - run: |
+          mkdir -p reports/e2e allure-results/e2e
+          pytest -m e2e \
             --html=reports/e2e/report.html \
-            --self-contained-html
+            --self-contained-html \
+            --alluredir=allure-results/e2e
 
-      - name: Upload E2E Reports
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: e2e-reports
           path: reports/e2e/
 
-      - name: Upload Allure Results
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: allure-unit
-          path: allure-results/unit
+          name: allure-e2e
+          path: allure-results/e2e
 
-  # ✅ STAGE 4 - PUBLISH TO PAGES (ONLY IF ALL PASS)
+
+  # ✅ FINAL PUBLISH (ALL REPORTS + ALLURE)
   publish-report:
     runs-on: ubuntu-latest
     needs: e2e-tests
 
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all reports
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: all-reports
 
+      # ✅ prepare base site
       - name: Prepare site
         run: |
           mkdir site
 
-          echo "<h1>Test Reports Dashboard</h1>" > site/index.html
-
-          echo "<h2>Unit</h2>" >> site/index.html
-          echo "<a href='unit/report.html'>Unit Report</a><br>" >> site/index.html
-          echo "<a href='unit/coverage/index.html'>Coverage</a><br>" >> site/index.html
-
-          echo "<h2>API</h2>" >> site/index.html
-          echo "<a href='api/report.html'>API Report</a><br>" >> site/index.html
-
-          echo "<h2>E2E</h2>" >> site/index.html
-          echo "<a href='e2e/report.html'>E2E Report</a><br>" >> site/index.html
+          echo "<h1>Test Reports</h1>" > site/index.html
+          echo "unit/report.htmlUnit</a><br>" >> site/index.html
+          echo "api/report.htmlAPI</a><br>" >> site/index.html
+          echo "e2e/report.htmlE2E</a><br>" >> site/index.html
+          echo "allure/Allure Dashboard</a>" >> site/index.html
 
           mkdir -p site/unit site/api site/e2e
-
           cp -r all-reports/unit-reports/* site/unit/
           cp -r all-reports/api-reports/* site/api/
           cp -r all-reports/e2e-reports/* site/e2e/
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: site/
-
-      - name: Deploy
-        uses: actions/deploy-pages@v4
-
-  allure-report:
-    runs-on: ubuntu-latest
-    needs: e2e-tests
-
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Merge Allure results
+      # ✅ merge allure results
+      - name: Merge Allure Results
         run: |
           mkdir -p allure-results
-          cp -r artifacts/allure-unit/* allure-results/ || true
-          cp -r artifacts/allure-api/* allure-results/ || true
-          cp -r artifacts/allure-e2e/* allure-results/ || true
+          cp -r all-reports/allure-unit/* allure-results/ || true
+          cp -r all-reports/allure-api/* allure-results/ || true
+          cp -r all-reports/allure-e2e/* allure-results/ || true
 
+      # ✅ generate allure INTO site/
       - name: Generate Allure Report
         uses: andgineer/allure-report@v3.6
         id: allure
@@ -212,3 +162,18 @@ jobs:
           allure-results: allure-results
           website: site
           reports-site-path: allure
+
+      # ✅ redirect /allure → latest report
+      - name: Add Allure redirect
+        run: |
+          LATEST=$(ls -td site/allure/*/ | head -1 | xargs basename)
+          echo "<meta http-equiv=\"refresh\" content=\"0; url=./$LATEST/index.html\">" > site/allure/index.html
+
+      # ✅ deploy everything once
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/
+
+      - uses: actions/deploy-pages@v4
