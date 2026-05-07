@@ -7,3 +7,6 @@ pytest>=8.0
 pytest-django>=4.8
 pytest-playwright>=0.5
 playwright>=1.44
+pytest-html
+pytest-cov
+allure-pytest

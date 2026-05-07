@@ -49,6 +49,10 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+## ✅ Test Reports
+
+[View Latest Report](https://ashanmugasundar.github.io/playwright-demo/)
+
 ## Sundar notes
 1. How to run all tests in one go> pytest
 2. How to run only Unit test>
@@ -88,6 +92,11 @@ pip install pytest-sugar pytest-testmon
 pip install pytest-reportlog
 
 👉 Then generate structured output (for dashboards/CI)
+
+pytest -m unit --html=reports/unit_report.html --self-contained-html
+pytest -m api --html=reports/api_report.html --self-contained-html
+pytest -m e2e --html=reports/e2e_report.html --self-contained-html
+pytest -m --html=reports/report.html --self-contained-html
 
 ## Common Pit Falls:
 1. Django blocks logout via GET for security (CSRF protection). Logout now requires POST only

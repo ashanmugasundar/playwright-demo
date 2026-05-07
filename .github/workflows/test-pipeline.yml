@@ -1,4 +1,4 @@
-name: Django Playwright Test Pipeline
+name: Django Test Pipeline (Multi-stage + Reports)
 
 on:
   push:
@@ -6,28 +6,44 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
 
+  # ✅ STAGE 1 - UNIT
   unit-tests:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           pip install -r requirements.txt
+          pip install pytest-html pytest-cov
 
       - name: Run Unit Tests
-        run: pytest -m unit -v
+        run: |
+          mkdir -p reports/unit
+          pytest -m unit \
+            --cov=. \
+            --cov-report=html:reports/unit/coverage \
+            --html=reports/unit/report.html \
+            --self-contained-html
+
+      - name: Upload Unit Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-reports
+          path: reports/unit/
 
 
+  # ✅ STAGE 2 - API
   api-tests:
     runs-on: ubuntu-latest
     needs: unit-tests
@@ -39,12 +55,25 @@ jobs:
         with:
           python-version: '3.11'
 
-      - run: pip install -r requirements.txt
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+          pip install pytest-html
 
       - name: Run API Tests
-        run: pytest -m api -v
+        run: |
+          mkdir -p reports/api
+          pytest -m api \
+            --html=reports/api/report.html \
+            --self-contained-html
 
+      - name: Upload API Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-reports
+          path: reports/api/
 
+  # ✅ STAGE 3 - E2E
   e2e-tests:
     runs-on: ubuntu-latest
     needs: api-tests
@@ -56,10 +85,73 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           pip install -r requirements.txt
           python -m playwright install --with-deps
+          pip install pytest-html
 
       - name: Run E2E Tests
-        run: pytest -m e2e -v
+        run: |
+          mkdir -p reports/e2e
+          pytest -m e2e \
+            --html=reports/e2e/report.html \
+            --self-contained-html
+
+      - name: Upload E2E Reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-reports
+          path: reports/e2e/
+
+
+  # ✅ STAGE 4 - PUBLISH TO PAGES (ONLY IF ALL PASS)
+  publish-report:
+    runs-on: ubuntu-latest
+    needs: e2e-tests
+
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: all-reports
+
+      - name: Prepare site
+        run: |
+          mkdir site
+
+          echo "<h1>Test Reports Dashboard</h1>" > site/index.html
+
+          echo "<h2>Unit</h2>" >> site/index.html
+          echo "<a href='unit/report.html'>Unit Report</a><br>" >> site/index.html
+          echo "<a href='unit/coverage/index.html'>Coverage</a><br>" >> site/index.html
+
+          echo "<h2>API</h2>" >> site/index.html
+          echo "<a href='api/report.html'>API Report</a><br>" >> site/index.html
+
+          echo "<h2>E2E</h2>" >> site/index.html
+          echo "<a href='e2e/report.html'>E2E Report</a><br>" >> site/index.html
+
+          mkdir -p site/unit site/api site/e2e
+
+          cp -r all-reports/unit-reports/* site/unit/
+          cp -r all-reports/api-reports/* site/api/
+          cp -r all-reports/e2e-reports/* site/e2e/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/
+
+      - name: Deploy
+        uses: actions/deploy-pages@v4
