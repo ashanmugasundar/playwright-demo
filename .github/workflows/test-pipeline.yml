@@ -164,10 +164,11 @@ jobs:
           reports-site-path: allure
 
       # ✅ redirect /allure → latest report
-      - name: Add Allure redirect
+      - name: Add Allure redirect   
         run: |
-          LATEST=$(ls -td site/allure/*/ | head -1 | xargs basename)
-          echo "<meta http-equiv=\"refresh\" content=\"0; url=./$LATEST/index.html\">" > site/allure/index.html
+            chmod -R 777 site/allure
+            LATEST=$(ls -td site/allure/*/ | head -1 | xargs basename)
+            echo "<meta http-equiv=\"refresh\" content=\"0; url=./$LATEST/index.html\">" > site/allure/index.html
 
       # ✅ deploy everything once
       - uses: actions/configure-pages@v4
