@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>{% block title %}Demo{% endblock %}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    .nav a { margin-right: 12px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f5f5f5; text-align: left; }
+    .container { max-width: 900px; }
+    .msg { padding: 10px; background: #eef9ff; border: 1px solid #cdefff; margin: 12px 0; }
+    .errorlist { color: #b00020; }
+    label { display:block; margin-top: 10px; }
+    input { padding: 6px 8px; width: 320px; }
+    button { padding: 8px 12px; margin-top: 12px; }
+    .btn {
+        display: inline-block;
+        padding: 8px 14px;
+        margin-right: 10px;
+        text-decoration: none;
+        background: #e0e0e0;
+        color: #333;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .btn:hover {
+        background: #d0d0d0;
+    }
+
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #0056b3;
+    }
+
+    .btn-logout {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-logout:hover {
+        background: #a71d2a;
+    }
+
+    .icon-btn {
+        text-decoration: none;
+        font-size: 16px;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+    .icon-btn:hover {
+        background: #f0f0f0;
+        cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      {% if user.is_authenticated %}
+
+        <a href="{% url 'users_list' %}" class="btn" data-testid="users-btn">Users</a>
+
+        <a href="{% url 'user_add' %}" class="btn btn-primary" data-testid="add-user-btn">Add User</a>
+
+        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-logout">Logout</button>
+        </form>
+
+      {% else %}
+        <a href="{% url 'login' %}" class="btn">Login</a>
+        <a href="{% url 'register' %}" class="btn btn-primary">Register</a>
+      {% endif %}
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="msg">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

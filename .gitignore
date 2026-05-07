@@ -1,0 +1,61 @@
+# --------------------------
+# Python
+# --------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# --------------------------
+# Django
+# --------------------------
+*.log
+*.pot
+db.sqlite3
+staticfiles/
+local_settings.py
+
+# --------------------------
+# Environment
+# --------------------------
+.env
+.env.*
+venv/
+env/
+
+# --------------------------
+# IDE / Editor
+# --------------------------
+.vscode/
+.idea/
+
+# --------------------------
+# OS / temp files
+# --------------------------
+*.bak
+*.tmp
+*.swp
+*.swo
+*.DS_Store
+
+# --------------------------
+# Test / Reports (IMPORTANT)
+# --------------------------
+reports/
+htmlcov/
+allure-results/
+allure-report/
+site/
+
+# --------------------------
+# Playwright
+# --------------------------
+test-results/
+playwright-report/
