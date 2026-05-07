@@ -60,7 +60,7 @@ python manage.py runserver
 # Playwright Django Automation
 
 ## ✅ CI Pipeline
-![CI](https://github.com/ashanmugasundar/actions/workflows/test-pipeline.yml/badge.svg)
+![CI](https://github.com/ashanmugasundar/playright-demo/actions/workflows/test-pipeline.yml/badge.svg)
 
 
 ## ✅ Test Coverage

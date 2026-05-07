@@ -145,13 +145,17 @@ jobs:
           cp -r all-reports/api-reports/* site/api/
           cp -r all-reports/e2e-reports/* site/e2e/
 
-      # ✅ merge allure results
-      - name: Merge Allure Results
+      - name: Copy Coverage Badge
         run: |
-          mkdir -p allure-results
-          cp -r all-reports/allure-unit/* allure-results/ || true
-          cp -r all-reports/allure-api/* allure-results/ || true
-          cp -r all-reports/allure-e2e/* allure-results/ || true
+          mkdir -p site/badges
+          cp coverage.svg site/badges/coverage.svg || true
+            # ✅ merge allure results
+            - name: Merge Allure Results
+              run: |
+                mkdir -p allure-results
+                cp -r all-reports/allure-unit/* allure-results/ || true
+                cp -r all-reports/allure-api/* allure-results/ || true
+                cp -r all-reports/allure-e2e/* allure-results/ || true
 
       # ✅ generate allure INTO site/
       - name: Generate Allure Report
