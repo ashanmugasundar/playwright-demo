@@ -210,15 +210,5 @@ jobs:
         if: always()
         with:
           allure-results: allure-results
-          website: gh-pages-dir
+          website: site
           reports-site-path: allure
-
-      - name: Debug Allure Files
-        run: find . -type d | grep allure
-
-      - name: Deploy Allure to Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: always()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ${{ steps.allure.outputs.reports-site }}
