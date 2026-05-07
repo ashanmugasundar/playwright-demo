@@ -38,6 +38,16 @@ jobs:
             --self-contained-html \
             --alluredir=allure-results/unit
 
+      - name: Generate coverage badge
+        run: |
+          pip install coverage-badge
+          coverage-badge -o coverage.svg
+          
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-badge
+          path: coverage.svg
+
       - uses: actions/upload-artifact@v4
         with:
           name: unit-reports
@@ -129,7 +139,7 @@ jobs:
         with:
           path: all-reports
 
-      # ✅ prepare base site
+      # ✅ Prepare site
       - name: Prepare site
         run: |
           mkdir site
@@ -145,29 +155,30 @@ jobs:
           cp -r all-reports/api-reports/* site/api/
           cp -r all-reports/e2e-reports/* site/e2e/
 
+      # ✅ Copy coverage badge
       - name: Copy Coverage Badge
         run: |
           mkdir -p site/badges
-          cp coverage.svg site/badges/coverage.svg || true
-            # ✅ merge allure results
-            - name: Merge Allure Results
-              run: |
-                mkdir -p allure-results
-                cp -r all-reports/allure-unit/* allure-results/ || true
-                cp -r all-reports/allure-api/* allure-results/ || true
-                cp -r all-reports/allure-e2e/* allure-results/ || true
+          cp all-reports/coverage-badge/coverage.svg site/badges/coverage.svg || true
 
-      # ✅ generate allure INTO site/
+      # ✅ Merge allure
+      - name: Merge Allure Results
+        run: |
+          mkdir -p allure-results
+          cp -r all-reports/allure-unit/* allure-results/ || true
+          cp -r all-reports/allure-api/* allure-results/ || true
+          cp -r all-reports/allure-e2e/* allure-results/ || true
+
+      # ✅ Generate Allure
       - name: Generate Allure Report
         uses: andgineer/allure-report@v3.6
-        id: allure
         if: always()
         with:
           allure-results: allure-results
           website: site
           reports-site-path: allure
 
-      # ✅ deploy everything once
+      # ✅ Deploy
       - uses: actions/configure-pages@v4
 
       - uses: actions/upload-pages-artifact@v3
