@@ -17,6 +17,7 @@ urlpatterns = [
     path('users/', views.users_list, name='users_list'),
     path('users/add/', views.user_add, name='user_add'),
     path('users/<int:user_id>/edit/', views.user_edit, name='user_edit'),
-
+    path('users/export/', views.users_export_csv, name='users_export_csv'),
+    
     path('api/', include(router.urls)),
 ]
