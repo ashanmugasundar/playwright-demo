@@ -1,7 +1,12 @@
 [run]
-relative_files = true
-source = .
+source = accounts
 
 [report]
 omit =
+    */migrations/*
     */tests/*
+    */config/*
+    */__init__.py
+
+show_missing = True
+skip_empty = True

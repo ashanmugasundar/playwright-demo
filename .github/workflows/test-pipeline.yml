@@ -145,10 +145,18 @@ jobs:
           mkdir site
 
           echo "<h1>Test Reports</h1>" > site/index.html
-          echo "unit/report.htmlUnit</a><br>" >> site/index.html
-          echo "api/report.htmlAPI</a><br>" >> site/index.html
-          echo "e2e/report.htmlE2E</a><br>" >> site/index.html
-          echo "allure/Allure Dashboard</a>" >> site/index.html
+
+          echo "<h3>Unit</h3>" >> site/index.html
+          echo "<a href='unit/report.html'>Unit Report</a><br>" >> site/index.html
+          echo "<a href='unit/coverage/index.html'>Unit Coverage</a><br>" >> site/index.html
+
+          echo "<h3>API</h3>" >> site/index.html
+          echo "<a href='api/report.html'>API Report</a><br>" >> site/index.html
+
+          echo "<h3>E2E</h3>" >> site/index.html
+          echo "<a href='e2e/report.html'>E2E Report</a><br>" >> site/index.html
+
+          echo "<br><a href='allure/'>Allure Dashboard</a>" >> site/index.html
 
           mkdir -p site/unit site/api site/e2e
           cp -r all-reports/unit-reports/* site/unit/
