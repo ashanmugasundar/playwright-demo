@@ -248,3 +248,122 @@ def test_user_edit_post_valid_staff_updates(monkeypatch, staff_user, another_use
     assert resp.status_code == 302
     another_user.refresh_from_db()
     assert another_user.username == "updated_username"
+
+
+@pytest.mark.unit
+@override_settings(ROOT_URLCONF="accounts.urls")
+def test_user_add_get_renders_form(monkeypatch, staff_user):
+    rf = RequestFactory()
+    request = rf.get("/users/add/")
+    request.user = staff_user
+
+    captured = {}
+
+    def fake_render(req, tpl, ctx):
+        captured["template"] = tpl
+        captured["context"] = ctx
+        return HttpResponse("ok")
+
+    monkeypatch.setattr(views, "render", fake_render)
+
+    class FakeForm:
+        def __init__(self, *args, **kwargs):
+            pass
+
+    monkeypatch.setattr(views, "UserManageForm", FakeForm)
+
+    resp = views.user_add(request)
+
+    assert resp.status_code == 200
+    assert captured["template"] == "accounts/user_form.html"
+    assert captured["context"]["mode"] == "add"
+
+
+@pytest.mark.unit
+@override_settings(ROOT_URLCONF="accounts.urls")
+def test_user_add_post_invalid(monkeypatch, staff_user):
+    rf = RequestFactory()
+    request = rf.post("/users/add/", data={})
+    request.user = staff_user
+
+    captured = {}
+
+    def fake_render(req, tpl, ctx):
+        captured["context"] = ctx
+        return HttpResponse("ok")
+
+    monkeypatch.setattr(views, "render", fake_render)
+
+    class FakeForm:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def is_valid(self):
+            return False
+
+    monkeypatch.setattr(views, "UserManageForm", FakeForm)
+
+    resp = views.user_add(request)
+
+    assert resp.status_code == 200
+    assert captured["context"]["mode"] == "add"
+
+
+@pytest.mark.unit
+@override_settings(ROOT_URLCONF="accounts.urls")
+def test_user_edit_get_renders(monkeypatch, staff_user, another_user):
+    rf = RequestFactory()
+    request = rf.get(f"/users/{another_user.id}/edit/")
+    request.user = staff_user
+
+    captured = {}
+
+    def fake_render(req, tpl, ctx):
+        captured["template"] = tpl
+        captured["context"] = ctx
+        return HttpResponse("ok")
+
+    monkeypatch.setattr(views, "render", fake_render)
+
+    class FakeForm:
+        def __init__(self, *args, **kwargs):
+            self.instance = kwargs.get("instance")
+
+    monkeypatch.setattr(views, "UserManageForm", FakeForm)
+
+    resp = views.user_edit(request, another_user.id)
+
+    assert resp.status_code == 200
+    assert captured["context"]["mode"] == "edit"
+    assert captured["context"]["target_user"].id == another_user.id
+
+
+@pytest.mark.unit
+@override_settings(ROOT_URLCONF="accounts.urls")
+def test_user_edit_post_invalid(monkeypatch, staff_user, another_user):
+    rf = RequestFactory()
+    request = rf.post(f"/users/{another_user.id}/edit/", data={})
+    request.user = staff_user
+
+    captured = {}
+
+    def fake_render(req, tpl, ctx):
+        captured["context"] = ctx
+        return HttpResponse("ok")
+
+    monkeypatch.setattr(views, "render", fake_render)
+
+    class FakeForm:
+        def __init__(self, *args, **kwargs):
+            self.instance = kwargs.get("instance")
+
+        def is_valid(self):
+            return False
+
+    monkeypatch.setattr(views, "UserManageForm", FakeForm)
+
+    resp = views.user_edit(request, another_user.id)
+
+    assert resp.status_code == 200
+    assert captured["context"]["mode"] == "edit"
+
